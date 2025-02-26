@@ -1,0 +1,9 @@
+{% extends "login.html" %}
+
+{% block title %}Registro de Usuario{% endblock %}
+
+{% block button %}Registrarse →{% endblock %}
+
+{% block links %}
+    ¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia Sesión</a>
+{% endblock %}

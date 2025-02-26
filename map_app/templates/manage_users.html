@@ -1,0 +1,28 @@
+{% extends   "mapprueva.html"  %}
+{%  block content  %}
+<div class ="auto-card">
+    <h2> Gestion de usuarios </h2>
+    <table>
+        <tr>
+            <th>Usuario</th>
+            <th>Super usuario</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+        {%  for user in users  %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ 'Si' if user.is_superuser else  'NO' }}</td>
+            <td>{{  'Si'  if user.is_active  else  'No' }}</td>
+            <td>
+                <form method="POST"  action="{{ url_for('toggle_user') }}">
+                    <input type="hidden"  name="user_id" value="{{ user.id }}">
+                    <input type="hidden" name="action" value="toggle_user">
+                    <button type="submit">{{'DEsactivar'   if user.is_active  else 'Activar'}}</button>
+                </form>
+            </td>
+        </tr>
+        {%  endfor %}
+    </table>
+</div>
+{% endblock %}

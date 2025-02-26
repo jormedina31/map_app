@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información del Predio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .info-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .info-item {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex: 1 1 calc(50% - 20px);
+            box-sizing: border-box;
+        }
+        .info-item h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .info-item p {
+            margin: 0;
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Información Basica del Predio</h1>
+    <div class="info-container">
+        <div class="info-item">
+            <h3>Alcaldia:</h3>
+            <p>{{ datos.alcaldia  | default("No disponible") }}</p>
+        </div>
+        <div class="info-item">
+            <h3>Colonia:</h3>
+            <p>{{ datos.colonia | default("No disponible") }}</p>
+        </div>
+        <div class="info-item">
+            <h3>Calle:</h3>
+            <p>{{ datos.calle  | default("No disponible")}}</p>
+        </div>
+        <div class="info-item">
+            <h3>Superficie de Terreno:</h3>
+            <p>{{ datos.superficiet | default("No disponible")}} m²</p>
+        </div>
+        <div class="info-item">
+            <h3>Superficie de construccion:</h3>
+            <p>{{ datos.superficiec | default("No disponible")}}  m²</p>
+        </div>
+        <div class="info-item">
+            <h3>Valor del Suelo:</h3>
+            <p> $ {{ datos.valorT | default("No disponible")}}</p>
+        </div>
+        <div class="info-item">
+            <h3>fid2</h3>
+            <p> {{ datos.fi2 | default("No disponible")}}</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo - Ciudad de México</title>
+    <!-- CSS de Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet"  href="{{  url_for('static', filename='css/main.css')}}">
+    <!-- JS de Leaflet   https://unpkg.com/leaflet/dist/leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <!-- encabezado-->
+    
+        
+        <div class="encabezado-visor">
+            <!-- Contenedor logo + texto -->
+            <div class="contenedor-logo">
+                <img src="{{ url_for('static', filename='logo-principal.png') }}" 
+                     class="logo-gobierno" 
+                     alt="Logo Gobierno CDMX">
+        
+                <div class="texto-institucional">
+                    <span class="titulo-principal">VISOR CARTOGRAFICO</span>
+                    
+                </div>
+            </div>
+        
+            <!-- Instituciones -->
+           
+        
+            <!-- Título flotante -->
+           <!--- <span class="titulo-visor bgc-2">Visor Cartográfico Ciudad de México</span> -->
+        </div>
+        
+    
+
+    <!-- Contenedor del mapa -->
+    <div id="map">
+    <div class="auth-container">
+        {% if current_user.is_authenticated %}
+            <span>👤 Bienvenido, {{ current_user.username }}!</span>
+            <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">🔑 Iniciar Sesión</a>
+            <span class="auth-divider">|</span>
+            <a href="{{ url_for('signup') }}">📝 Registrarse</a>
+        {% endif %}
+    </div>
+    <!-- floating-buttons   o form group -->
+    <div class="floating-buttons">   
+
+
+
+        <div id="busqueda-global" class="form-group" >
+            <input type="text" 
+                   id="input-predio-global" 
+                   placeholder="Clave del predio (Ej: 07668901)"
+                   class="search-input"
+                   maxlength="8"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,  ''); validarInput()"
+                   onkeypress="handleEnter(event)"
+                   >
+            <div class="opciones-busqueda" >
+                <label>
+                    <input  type="radio"
+                            name="tipo-busqueda"
+                            value="predio"
+                            checked
+                            onchange="actualizarPlaceholder()">Predio
+                </label>
+                <label>
+                    <input  type="radio"
+                            name="tipo-busqueda"
+                            value="construccion"
+                            onchange="actualizarPlaceholder()">Construccion
+                </label>
+
+            </div>
+            
+            <button onclick="Busqueda()" class="search-button">Buscar en toda la CDMX</button>
+        </div>
+       
+         <select id="delegaciones"  title="seleciona la delegacion deseada"  onchange="mostrarOpciones(this.value)">
+            <option name="" >Buscar por Delegacion </option>
+            <option value="002">1.Azcapotzalco</option>
+            <option value="003">2.Coyoacán</option>
+            <option value="004">3.Cuajimalpa de Morelos</option>
+            <option value="005">4.Gustavo A. Madero</option>
+            <option value="006">5.Iztacalco</option>
+            <option value="007">6.Iztapalapa</option>
+            <option value="008">7.La Magdalena Contreras</option>
+            <option value="009">8.Milpa Alta</option>
+            <option value="010">9.Álvaro Obregón</option>
+            <option value="011">10.Tláhuac</option>
+            <option value="012">11.Tlalpan</option>
+            <option value="013">12.Xochimilco</option>
+            <option value="014">13.Benito Juárez</option>
+            <option value="015">14.Cuauhtémoc</option>
+            <option value="016">15.Miguel Hidalgo</option>
+            <option value="017">16.Venustiano Carranza</option>
+            
+            <!-- Agrega más opciones según tus datos -->
+        </select>
+        <div id="opciones-container"></div>
+        <div id="formulario-container"></div>
+        <!--aqui busqueda global-->
+        
+        <button onclick="toggleSubmenu()">Tickets</button>
+        <button onclick="setLayer('satellite')">Visor Topográfico</button>
+        <button onclick="setLayer('openstreet')">Visor openstreet</button>
+        <button onclick="setLayer('topographic')">Visor Satelital</button>
+        
+        <!--   <iframe src='/data' width="800" height="600" title="Página incrustada"></iframe>       para agrgar la inf -->
+        
+        <!--<div id="opciones-container"></div> -->
+        <!--<div id="formulario-container"></div> -->
+        
+    </div>
+    <div class="tickets-submenu">  <!--tickets-submenu-->
+        <div id="tickets-submenu" class="submenu-st"> <!--submenu-content-->
+            <div  id="folios-list"  class="folios-container"></div>
+            
+        </div>
+    </div>
+
+    <div id="info-predio-container" class="info-predio-estilo">
+        <button onclick="cerrarInfoPredio()" class="boton-cerrar">×</button>
+        <iframe id="info-predio" class="contenido"></iframe>
+    </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script   src="{{  url_for('static', filename ='js/main.js')}}"></script>
+</body>
+</html>

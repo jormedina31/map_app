@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo - Ciudad de México</title>
+    <!-- CSS de Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Contenedor del mapa */
+        #map {
+            height: 100vh;
+            width: 100%;
+            position: relative;
+        }
+        /* esrilo para los lectbox */
+        #delegaciones {
+        background-color: #800000;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        #delegaciones option {
+        background-color: #800000;
+        color: white;
+       }
+        /* Botones flotantes */
+        .floating-buttons {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .floating-buttons button {
+            background-color: #800000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .floating-buttons button:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-buttons button:active {
+            transform: scale(0.95);
+        }
+        .delegacion-tooltip {
+           background: rgba(255, 87, 34, 0.9);
+           color: white;
+           font-weight: bold;
+           padding: 5px 10px;
+           border-radius: 4px;
+           font-family: 'Arial', sans-serif;
+           }
+    /* Estilos para la barra de autenticación */
+        .auth-container {
+           position: absolute;
+           top: 110px;
+           left: 20px;
+           z-index: 1000;
+           background: rgba(255, 255, 255, 0.9);
+           padding: 12px 20px;
+           border-radius: 8px;
+           box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+           backdrop-filter: blur(5px);
+           }
+  
+        .auth-container a, .auth-container span {
+           color: #800000 !important;
+           text-decoration: none;
+           font-weight: 500;
+           margin: 0 8px;
+           transition: all 0.3s;
+           }
+
+        .auth-container a:hover {
+           color: #600000 !important;
+           transform: translateY(-1px);
+           }
+
+        .auth-container a:active {
+           transform: translateY(0);
+           }
+
+        .auth-divider {
+           color: #800000;
+           font-weight: bold;
+           }
+
+           .encabezado-visor {
+        position: absolute;
+        width: 100%;
+        height: 100px; /* Aumentado para espacio del logo */
+        background: white;
+        z-index: 999;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+    }
+
+    .contenedor-logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .logo-gobierno {
+        height: 65px;
+        width: auto;
+    }
+
+    .texto-institucional {
+        display: flex;
+        flex-direction: column;
+        border-left: 2px solid #800000;
+        padding-left: 15px;
+    }
+
+    .titulo-principal {
+        font-family: 'Arial Black', sans-serif;
+        font-size: 1.8em;
+        color: #800000;
+        line-height: 1;
+    }
+
+    .subtitulo-principal {
+        font-family: 'Arial Narrow', sans-serif;
+        font-size: 0.9em;
+        color: #444;
+        letter-spacing: 0.5px;
+    }
+
+    .instituciones {
+        margin-left: auto;
+        text-align: right;
+        color: #800000;
+    }
+
+    .instituciones div {
+        font-size: 0.95em;
+        margin: 3px 0;
+        font-weight: 600;
+    }
+
+    .titulo-visor {
+        position: absolute;
+        bottom: -25px;
+        left: 130px;
+        font-size: 1.3em;
+        color: #800000;
+        background: white;
+        padding: 5px 15px;
+        border-radius: 0 0 5px 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+      
+
+    </style>
+    <!-- JS de Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <!-- encabezado-->
+    
+        
+        <div class="encabezado-visor">
+            <!-- Contenedor logo + texto -->
+            <div class="contenedor-logo">
+                <img src="{{ url_for('static', filename='logo-principal.png') }}" 
+                     class="logo-gobierno" 
+                     alt="Logo Gobierno CDMX">
+        
+                <div class="texto-institucional">
+                    <span class="titulo-principal">VISOR CARTOGRAFICO</span>
+                    
+                </div>
+            </div>
+        
+            <!-- Instituciones -->
+           
+        
+            <!-- Título flotante -->
+           <!--- <span class="titulo-visor bgc-2">Visor Cartográfico Ciudad de México</span> -->
+        </div>
+        
+    
+
+    <!-- Contenedor del mapa -->
+    <div id="map">
+    <div class="auth-container">
+        {% if current_user.is_authenticated %}
+            <span>👤 Bienvenido, {{ current_user.username }}!</span>
+            <a href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">🔑 Iniciar Sesión</a>
+            <span class="auth-divider">|</span>
+            <a href="{{ url_for('signup') }}">📝 Registrarse</a>
+        {% endif %}
+    </div>
+    <!-- Botones flotantes -->
+    <div class="floating-buttons">
+        <select id="delegaciones"  onchange="loadDelegacionGeometry(this.value)">
+            <option name="">Selecciona Delegacion </option>
+            <option value="Azcapotzalco">Azcapotzalco</option>
+            <option value="Coyoacán">Coyoacán</option>
+            <option value="Cuajimalpa de Morelos">Cuajimalpa de Morelos</option>
+            <option value="Gustavo A. Madero">Gustavo A. Madero</option>
+            <option value="Iztacalco">Iztacalco</option>
+            <option value="Iztapalapa">Iztapalapa</option>
+            <option value="La Magdalena Contreras">La Magdalena Contreras</option>
+            <option value="Milpa Alta">Milpa Alta</option>
+            <option value="Álvaro Obregón">Álvaro Obregón</option>
+            <option value="Tláhuac">Tláhuac</option>
+            <option value="Tlalpan">Tlalpan</option>
+            <option value="Xochimilco">Xochimilco</option>
+            <option value="Benito Juárez">Benito Juárez</option>
+            <option value="Cuauhtémoc">Cuauhtémoc</option>
+            <option value="Miguel Hidalgo">Miguel Hidalgo</option>
+            <option value="Venustiano Carranza">Venustiano Carranza</option>
+
+            <!-- Agrega más opciones según tus datos -->
+        </select>
+        <button onclick="location.href='/data'">Datos</button>
+        <button onclick="setLayer('satellite')">Visor Topográfico</button>
+        <button onclick="setLayer('topographic')">Visor Satelital</button>
+        <button onclick="location.href='/info'">infor</button>
+    </div>
+    </div>
+    <script>
+        // Coordenadas del polígono de la Ciudad de México
+        const mexicoCityBounds = [
+            [18.973773, -99.316406], // Suroeste
+            [19.592757, -98.940308] // Noreste
+        ];
+
+        // Inicializar el mapa centrado en la Ciudad de México
+        const map = L.map('map', {
+            center: [19.432608, -99.133209], // Centro de la Ciudad de México
+            zoom: 12, // Zoom inicial
+            zoomControl: false,
+            minZoom: 11, // Zoom mínimo
+            maxZoom: 19, // Zoom máximo 16
+            maxBounds: mexicoCityBounds, // Limitar el mapa a la Ciudad de México
+            maxBoundsViscosity: 1.0 // Evitar que se salga del límite
+        });
+
+        // Capas de mapas
+        const layers = {
+            topographic: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                attribution: 'Datos: Google',
+                maxZoom: 20
+            }),
+            satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                attribution: 'Datos: Google',
+                maxZoom: 20
+            })
+        };
+
+        // Agregar la capa inicial
+     
+        // Cargar los polígonos al iniciar la página
+        loadPolygons();
+        // Dibujar el polígono de la Ciudad de México (opcional, para visualización)
+        
+        layers.topographic.addTo(map);
+        
+        function loadPolygons() {
+          fetch('/get_polygons')
+           .then(response => response.json())
+           .then(data => {
+            // Agregar los polígonos al mapa con tooltips
+            L.geoJSON(data, {
+                style: {
+                    color: '#800000',
+                    weight: 2,
+                    fillColor: 'bd6568',
+                    fillOpacity: 0.2
+                },
+                onEachFeature: function(feature, layer) {
+                    // Verificar si la propiedad "nombre_delegacion" existe en el feature
+                    if (feature.properties && feature.properties.nombre_delegacion) {
+                        // Agregar un tooltip con el nombre de la delegación
+                        layer.bindTooltip(feature.properties.nombre_delegacion, {
+                            permanent: false, // El tooltip no es permanente (solo se muestra al pasar el mouse)
+                            direction: 'top', // Dirección del tooltip
+                            className: 'custom-tooltip' // Clase CSS personalizada (opcional)
+                        });
+                    }
+                }
+            }).addTo(map);
+            })
+           .catch(error => console.error('Error al cargar los polígonos:', error));
+           }
+
+        //funcion para agregar delegaciones 
+        let delegacionLayer = null; // Almacenar la capa actual
+
+        async function loadDelegacionGeometry(delegacion) {
+          try {
+        // Eliminar capa anterior si existe
+           if (delegacionLayer) {
+                  map.removeLayer(delegacionLayer);
+                }
+
+        // Mostrar indicador de carga
+       // showLoadingSpinner();
+
+        // Fetch específico para delegaciones
+        const response = await fetch(`/get_delegacion?nombre=${encodeURIComponent(delegacion)}`);
+        if (!response.ok) throw new Error('Error en la respuesta');
+        
+        const data = await response.json();
+        
+        // Crear capa con estilo y tooltip
+        delegacionLayer = L.geoJSON(data, {
+            style: {
+                color: '#FF5722',
+                weight: 3,
+                fillColor: '#FF9800',
+                fillOpacity: 0.3
+            },
+            onEachFeature: (feature, layer) => {
+                if (feature.properties.nombre) {
+                    layer.bindTooltip(feature.properties.nombre, {
+                        permanent: true,
+                        className: 'delegacion-tooltip'
+                    });
+                }
+            }
+        }).addTo(map);
+
+        // Ajustar la vista al polígono
+        map.fitBounds(delegacionLayer.getBounds());
+
+         } catch (error) {
+              console.error('Error al cargar la delegación:', error);
+            alert('No se pudo cargar la delegación seleccionada');
+          } 
+        }
+        // Función para cambiar la capa
+        function setLayer(type) {
+            if (layers[type]) {
+                map.eachLayer(layer => map.removeLayer(layer)); // Quitar las capas actuales
+                layers[type].addTo(map); // Agregar la nueva capa
+                //cdmxPolygon.addTo(map);
+                loadPolygons();
+                 // Volver a agregar el polígono
+            } else {
+                console.error('Tipo de capa no válido:', type);
+            }
+        }
+    </script>
+</body>
+</html>
+

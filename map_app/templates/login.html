@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Iniciar Sesión</title>
+    <style>
+        /* Estilos del encabezado */
+        .encabezado-visor {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 100px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 1000;
+        }
+
+        .contenedor-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-gobierno {
+            height: 65px;
+            width: auto;
+        }
+
+        .texto-institucional {
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #800000;
+            padding-left: 15px;
+        }
+
+        .titulo-principal {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 1.8em;
+            color: #800000;
+            line-height: 1;
+        }
+
+        .subtitulo-principal {
+            font-family: 'Arial Narrow', sans-serif;
+            font-size: 0.9em;
+            color: #444;
+            letter-spacing: 0.5px;
+        }
+
+        .instituciones {
+            margin-left: auto;
+            text-align: right;
+            color: #800000;
+        }
+
+        .instituciones div {
+            font-size: 0.95em;
+            margin: 3px 0;
+            font-weight: 600;
+        }
+
+        /* Estilos del cuerpo */
+        body {
+            margin: 0;
+            padding: 120px 0 0; /* Espacio para el encabezado */
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            box-sizing: border-box;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            margin: 40px auto;
+            text-align: center;
+        }
+
+        /* Resto de estilos del formulario (se mantienen igual) */
+        h2 {
+            color: #800000;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #800000;
+        }
+
+        .submit-btn {
+            background: #800000;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            margin-top: 15px;
+        }
+
+        .submit-btn:hover {
+            background: #600000;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .auth-links {
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .auth-links a {
+            color: #800000;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .flash-messages {
+            margin: 15px 0;
+            padding: 10px;
+            background: #ffe5e5;
+            color: #cc0000;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Encabezado fijo en la parte superior -->
+    <div class="encabezado-visor">
+        <div class="contenedor-logo">
+            <img src="{{ url_for('static', filename='logo-principal.png') }}" 
+                 class="logo-gobierno" 
+                 alt="Logo Gobierno CDMX">
+            <div class="texto-institucional">
+                <span class="titulo-principal">VISOR CARTOGRAFICO</span>
+                
+            </div>
+        </div>
+       
+    </div>
+
+    
+    
+    <div class="auth-card">
+        <h2>{% block title %}Iniciar Sesión{% endblock %}</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" name="username" placeholder="Usuario" class="form-input" required>
+            <input type="password" name="password" placeholder="Contraseña" class="form-input" required>
+            <button type="submit" class="submit-btn">
+                {% block button %}Iniciar Sesión →{% endblock %}
+            </button>
+        </form>
+
+        <div class="auth-links">
+            {% block links %}
+                ¿No tienes cuenta? <a href="{{ url_for('signup') }}">Regístrate aquí</a>
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>
