@@ -235,12 +235,13 @@
                 const  div  =document.createElement('div');
                 div.className='folio-item';
                 div.innerHTML=`
-                <strong>Ticket:</strong> ${ticket.Ticket}
+                <strong>No  de Ticket:</strong> ${ticket.Ticket}
                 <div class="ticket-details" style="display:none;">
                     <div class="detail-item"><strong>Ticket:</strong> ${ticket.Folio || 'Sin datos' }</div>
                     <div class="detail-item"><strong>Cuenta:</strong> ${ticket.Cuenta || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Tarea:</strong> ${ticket.Tarea  || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Error:</strong> ${ticket.Error  || 'Sin datos'}</div>
+                    <div class="detail-item"><strong>Mensaje completo:</strong>  ${ticke.Folio,ticket.Cuenta  || 'sin datos '}</div>
                 </div>
             `;  
                 div.addEventListener('click',function(){
