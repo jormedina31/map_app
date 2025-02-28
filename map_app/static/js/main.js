@@ -231,18 +231,19 @@
             const tickets = await response.json();
             const  container=  document.getElementById('folios-list');
             container.innerHTML='';
-            tickets.forEach(ticket =>{
+            tickets.forEach(tickett =>{
                 const  div  =document.createElement('div');
                 div.className='folio-item';
                 div.innerHTML=`
-                <strong>No  de Ticket:</strong> ${ticket.Ticket}
+                <strong>No  de Ticket:</strong> ${tickett.ticket}
                 <div class="ticket-details" style="display:none;">
-                    <div class="detail-item"><strong>Ticket:</strong> ${ticket.Folio || 'Sin datos' }</div>
-                    <div class="detail-item"><strong>Cuenta:</strong> ${ticket.Cuenta || 'Sin datos'}</div>
-                    <div class="detail-item"><strong>Tarea:</strong> ${ticket.Tarea  || 'Sin datos'}</div>
-                    <div class="detail-item"><strong>Error:</strong> ${ticket.Error  || 'Sin datos'}</div>
-                    <div class="detail-item"><strong>Mensaje completo:</strong>  ${ticket.Folio || 'sin datos '}</div>
-                </div>
+                    <div class="detail-item"><strong>Folio:</strong> ${tickett.folio || 'Sin datos' }</div>
+                    <div  class="detail-item"><strong>Fecha de registro:</Strong>  ${tickett.fecha_proceso || '' } </div> 
+                    <div class="detail-item"><strong>Cuenta:</strong> ${tickett.cuenta || 'Sin datos'}</div>
+                    <div class="detail-item"><strong>Tarea:</strong> ${tickett.tarea  || 'Sin datos'}</div>
+                    <div class="detail-item"><strong>Error:</strong> ${tickett.error  || 'Sin datos'}</div>
+                    <div class="detail-item"><strong>Mensaje completo:</strong>  ${tickett.texto || 'sin datos '}</div>
+                                   
             `;  
                 div.addEventListener('click',function(){
                     const  details=this.querySelector('.ticket-details');

@@ -76,8 +76,8 @@ def get_tickets():
         print('tickets')
         print(dato)
 
-        df = pd.read_excel('tickets.xlsx')
-        df = df.where(pd.notnull(df), None)
+        #df = pd.read_excel('tickets.xlsx')
+        df = dato.where(pd.notnull(dato), None)
         print(df)
         return jsonify(df.to_dict(orient='records'))
     except Exception as e:
