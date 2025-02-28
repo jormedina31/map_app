@@ -64,6 +64,18 @@ def load_user(user_id):
 @login_required
 def get_tickets():
     try:
+        engine = create_engine(
+            f'postgresql://{DATABASE["user"]}:{DATABASE["password"]}@'
+            f'{DATABASE["host"]}:{DATABASE["port"]}/{DATABASE["database"]}'
+        )
+        query = text(str('SELECT * FROM  public.tickets  ORDER BY fecha_proceso'))
+        #query = text(str(query))  # Convierte la consulta a texto con parámetros nombrados
+        
+       
+        dato = pd.read_sql(query, engine)
+        print('tickets')
+        print(dato)
+
         df = pd.read_excel('tickets.xlsx')
         df = df.where(pd.notnull(df), None)
         print(df)

@@ -241,7 +241,7 @@
                     <div class="detail-item"><strong>Cuenta:</strong> ${ticket.Cuenta || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Tarea:</strong> ${ticket.Tarea  || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Error:</strong> ${ticket.Error  || 'Sin datos'}</div>
-                    <div class="detail-item"><strong>Mensaje completo:</strong>  ${ticke.Folio,ticket.Cuenta  || 'sin datos '}</div>
+                    <div class="detail-item"><strong>Mensaje completo:</strong>  ${ticket.Folio || 'sin datos '}</div>
                 </div>
             `;  
                 div.addEventListener('click',function(){
