@@ -39,6 +39,15 @@
 
     <!-- Contenedor del mapa -->
     <div id="map">
+        <!-- Botón de menú -->
+        <button id="menu-button" class="menu-button">Menú</button>
+
+<!-- Menú desplegable -->
+        <div id="side-menu" class="side-menu">
+            <button onclick="controlTickets()">Control de Tickets</button>
+            <button onclick="resolucionTickets()">Resolución de Tickets</button>
+            <button onclick="anadirCapas()">Añadir Capas</button>
+        </div>
     <div class="auth-container">
         {% if current_user.is_authenticated %}
             <span>👤 Bienvenido, {{ current_user.username }}!</span>

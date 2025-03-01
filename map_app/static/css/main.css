@@ -413,3 +413,69 @@ input[type="radio"] {
     max-height: 60vh;
     overflow-y: auto;
 }
+
+
+/* Estilo del botón de menú nuevo css  */
+
+
+
+
+.menu-button {
+    position: absolute;
+    top: 160px; /* Ajustado para estar debajo del encabezado */
+    left: 10px;
+    z-index: 1001; /* Asegura que esté sobre otros elementos */
+    background-color: #800000; /* Color institucional */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.menu-button:hover {
+    transform: scale(1.1);
+}
+
+.menu-button:active {
+    transform: scale(0.95);
+}
+
+/* Estilo del menú desplegable */
+.side-menu {
+    position: fixed;
+    top: 250;
+    left: -250px; /* Inicialmente oculto fuera de la pantalla */
+    width: 250px;
+    height: 100%;
+    /*background-color: #f0f0f0; /* Fondo claro */
+    transition: left 0.3s ease; /* Animación suave */
+    z-index: 2000; /* Debajo del botón de menú pero sobre el mapa */
+    padding-top: 200px; /* Espacio para evitar superposición con el botón */
+}
+
+/* Estado activo del menú */
+.side-menu.active {
+    left: 0; /* Visible al activarse */
+}
+
+/* Estilo de los botones dentro del menú */
+.side-menu button {
+    display: block;
+    width: 100%;
+    background-color: #800000;
+    color: white;
+    border: none;
+    padding: 15px;
+    text-align: left;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.side-menu button:hover {
+    background-color: #600000; /* Oscurece al pasar el mouse */
+}

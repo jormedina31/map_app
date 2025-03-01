@@ -237,7 +237,7 @@
                 div.innerHTML=`
                 <strong>No  de Ticket:</strong> ${tickett.ticket}
                 <div class="ticket-details" style="display:none;">
-                    <div class="detail-item"><strong>Folio:</strong> ${tickett.folio || 'Sin datos' }</div>
+                    <div class="detail-item"><strong>:</strong> ${tickett.folio || 'Sin datos' }</div>
                     <div  class="detail-item"><strong>Fecha de registro:</Strong>  ${tickett.fecha_proceso || '' } </div> 
                     <div class="detail-item"><strong>Cuenta:</strong> ${tickett.cuenta || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Tarea:</strong> ${tickett.tarea  || 'Sin datos'}</div>
@@ -419,3 +419,42 @@
             console.error('Tipo de capa no válido:', type);
         }
     }
+
+
+    // nuevas  funciones 
+
+    // Alternar visibilidad del menú
+document.getElementById('menu-button').addEventListener('click', function() {
+    document.getElementById('side-menu').classList.toggle('active');
+});
+
+// Cerrar el menú al hacer clic fuera de él
+document.addEventListener('click', function(event) {
+    var menu = document.getElementById('side-menu');
+    var button = document.getElementById('menu-button');
+    if (!menu.contains(event.target) && event.target !== button) {
+        menu.classList.remove('active');
+    }
+});
+
+// Funciones para las opciones del menú
+function controlTickets() {
+    toggleSubmenu(); // Reutiliza la función existente para mostrar tickets
+    document.getElementById('side-menu').classList.remove('active'); // Cierra el menú
+}
+
+function resolucionTickets() {
+    alert('Función para Resolución de Tickets aún no implementada');
+    document.getElementById('side-menu').classList.remove('active'); // Cierra el menú
+    // Aquí puedes agregar lógica adicional, como cargar un formulario o redirigir
+}
+
+function anadirCapas() {
+    // Ejemplo: Alternar entre capas disponibles
+    const currentLayer = map.hasLayer(layers.topographic) ? 'topographic' :
+                         map.hasLayer(layers.satellite) ? 'satellite' : 'openstreet';
+    if (currentLayer === 'topographic') setLayer('satellite');
+    else if (currentLayer === 'satellite') setLayer('openstreet');
+    else setLayer('topographic');
+    document.getElementById('side-menu').classList.remove('active'); // Cierra el menú
+}
