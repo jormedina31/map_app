@@ -4,7 +4,7 @@ DATABASE = {
     'database': 'polygono', 
     'user': 'finanzas2025',
     'password': 'finanzas2025',
-    'port': '5433'
+    'port': '5432'
 }
 
 

@@ -196,7 +196,7 @@ def get_pol1(query, params=None):   # de prueva
     
 @app.route('/get_polygons')
 def get_polygons():
-    query =  """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias_cdmx  WHERE geometry IS NOT NULL LIMIT 20""" # Reemplaza con tu tabla
+    query =  """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias  WHERE geometry IS NOT NULL LIMIT 20""" # Reemplaza con tu tabla
     #query= """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias_cdmx  WHERE "NOMGEO"='Azcapotzalco'"""
     gdf = get_pol1(query)
     if gdf is not None:

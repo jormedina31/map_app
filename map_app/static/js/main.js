@@ -237,7 +237,7 @@
                 div.innerHTML=`
                 <strong>No  de Ticket:</strong> ${tickett.ticket}
                 <div class="ticket-details" style="display:none;">
-                    <div class="detail-item"><strong>:</strong> ${tickett.folio || 'Sin datos' }</div>
+                    <div class="detail-item"><strong>Folio:</strong> ${tickett.folio || 'Sin datos' }</div>
                     <div  class="detail-item"><strong>Fecha de registro:</Strong>  ${tickett.fecha_proceso || '' } </div> 
                     <div class="detail-item"><strong>Cuenta:</strong> ${tickett.cuenta || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Tarea:</strong> ${tickett.tarea  || 'Sin datos'}</div>
