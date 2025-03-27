@@ -16,7 +16,7 @@ from config import DATABASE
 # Configuración de la conexión a PostgreSQL (ajusta estos valores según tu base de datos)
 
 #   f'postgresql://{DATABASE["user"]}:{DATABASE["password"]}@{DATABASE["host"]}:{DATABASE["port"]}/{DATABASE["database"]}'
-print(DATABASE["host"])
+
 DB_PARAMS = {
     "dbname": DATABASE["database"],
     "user": DATABASE["user"],
@@ -167,7 +167,7 @@ def extrae_inf(text):
 
 def read_last_message1():
     try:
-        chat_title = 'Dey'   #nombre del grupo
+        chat_title = 'Dey'   #nombre del grupo 
         chat = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'//span[@title="{chat_title}"]')))
         chat.click()
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.message-in, div.message-out')))
