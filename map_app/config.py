@@ -1,19 +1,20 @@
 # config.py
+#base para  control de tickets
 DATABASE = {
-    'host': '172.30.169.240',
-    'database': 'polygono', 
-    'user': 'finanzas2025',
-    'password': 'finanzas2025',
-    'port': '5432'
+    'host': '',
+    'database': '', 
+    'user': '',
+    'password': '',
+    'port': ''
 }
 
-
+#base de polygonos  no tan necesario
 DATABASE1={
-    'host':'10.1.130.121',
-    'database':'cdmx',
-    'user':'aarpide',
-    'password':'aarpide',
-    'port':'5432'
+    'host':'',
+    'database':'',
+    'user':'',
+    'password':'',
+    'port':''
 }
 
 
