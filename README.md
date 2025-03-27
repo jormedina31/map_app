@@ -49,6 +49,7 @@ una vez instalado  dirijete  al donde esta el proyecto principal app.py
 deberia verse algo como '(mapp) C:\ruta\al\proyecto\map_app\map_app'
 estando ahi  ejecuta
 
+-   pide  las crdenciales para el funcionamineto editando  config.py
 
 - python  app.py
 
