@@ -8,5 +8,13 @@ DATABASE = {
 }
 
 
+DATABASE1={
+    'host':'10.1.130.121',
+    'database':'cdmx',
+    'user':'aarpide',
+    'password':'aarpide',
+    'port':'5432'
+}
+
 
 #  psql -h 172.30.169.240 -p 5432 -U finanzas2025 -d polygono

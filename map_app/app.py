@@ -6,14 +6,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import bcrypt
 import pandas as pd
 #from dotenv import load_dotenv
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon,LineString, Point
 import os
-from config import DATABASE
+from config import DATABASE,DATABASE1
 import csv
 import concurrent.futures
 import time
 from  sqlalchemy.pool   import QueuePool
-
+from pyproj import CRS
 from concurrent.futures  import ThreadPoolExecutor
 #load_dotenv()
 app = Flask(__name__)
@@ -31,6 +31,16 @@ engine = create_engine(
     max_overflow=20,
     pool_recycle=1800
 )
+DATABASE_URL1 = f'postgresql://{DATABASE1["user"]}:{DATABASE1["password"]}@{DATABASE1["host"]}:{DATABASE1["port"]}/{DATABASE1["database"]}'
+
+engine1 = create_engine(
+    DATABASE_URL1,
+    poolclass=QueuePool,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=1800
+)
+
 
 
 engine_users = create_engine(
@@ -46,18 +56,79 @@ login_manager.login_view = 'login'
 
 
 class User(UserMixin):
-    def __init__(self, id, username):
+    def __init__(self, id, username, is_admin=False):
         self.id = id
         self.username = username
+        self.is_admin= is_admin
 
 @login_manager.user_loader
 def load_user(user_id):
     with engine_users.connect() as conn:
-        result = conn.execute(text('SELECT * FROM users WHERE id = :id'), {'id': user_id}).fetchone()
+        result = conn.execute(text('SELECT id,username,is_admin FROM users WHERE id = :id'), {'id': user_id}).fetchone()
         if result:
-            return User(id=result[0], username=result[1])
+            return User(id=result[0], username=result[1], is_admin=result[2] )
     return None
 
+
+
+
+#funciones para  tickets 
+@app.route('/update_ticket', methods=['POST'])
+@login_required
+def update_ticket():
+    if not current_user.is_admin:
+        return jsonify({"error": "No está autorizado"}), 403
+
+    data = request.json
+    print(f"Se recibió la actualización: {data}")
+
+    # Verificar que el ticket exista en los datos
+    if 'ticket' not in data:
+        return jsonify({"error": "Falta el campo 'ticket'"}), 400
+
+    ticket = data['ticket']
+    response_data = {"success": True}
+
+    try:
+        # Actualizar status (si existe en los datos)
+        if 'status' in data:
+            status = data['status']
+            with engine.connect() as con:
+                con.execute(
+                    text("UPDATE tickets SET status = :status WHERE ticket = :tik"),
+                    {'status': status, 'tik': ticket}
+                )
+                con.commit()
+            print(f"Status actualizado a '{status}' para el ticket {ticket}")
+
+        # Actualizar assigned_to (si existe en los datos)
+        if 'assigned_to' in data:
+            assigned_to = data['assigned_to']
+            with engine.connect() as conn:
+                conn.execute(
+                    text("UPDATE tickets SET assigned_to = :assig WHERE ticket = :tik"),
+                    {'assig': assigned_to, 'tik': ticket}
+                )
+                conn.commit()
+            print(f"Asignado a '{assigned_to}' para el ticket {ticket}")
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"Error al actualizar el ticket: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+#ruta para obtener usuarios 
+@app.route('/get_users')
+@login_required
+def  get_users():
+    #print(current_user)
+    if not current_user.is_admin:
+        return jsonify({"error": "No  autorizado"}),  403 
+    
+    with engine.connect()  as conn:
+        result=conn.execute(text(" SELECT  username  FROM  users "))
+        users=[row[0]   for row  in result]
+    return  jsonify(users)
 
 #funcion para mostrar la informacio de los tickets
 @app.route('/get_tickets')
@@ -68,17 +139,25 @@ def get_tickets():
             f'postgresql://{DATABASE["user"]}:{DATABASE["password"]}@'
             f'{DATABASE["host"]}:{DATABASE["port"]}/{DATABASE["database"]}'
         )
-        query = text(str('SELECT * FROM  public.tickets  ORDER BY fecha_proceso'))
+        if current_user.is_admin:
+            query = text('SELECT * FROM  public.tickets  ORDER BY fecha_proceso')
+            params={}
+        else:
+            query=text(''' SELECT * FROM public.tickets   WHERE   assigned_to=  :username  ORDER BY   fecha_proceso ''')
+            params={'username': current_user.username}    
+        #query = text('SELECT ticket, folio, cuenta, tarea ,usuario,error,texto ,fecha_proceso, status, assined_to FROM public.tickets  ORDER  BY fecha_proceso')
         #query = text(str(query))  # Convierte la consulta a texto con parámetros nombrados
         
+        df=pd.read_sql(query,engine,params=params)#  nu
+        df=df.where(pd.notnull(df), None)  #nu
        
-        dato = pd.read_sql(query, engine)
-        print('tickets')
-        print(dato)
+        #dato = pd.read_sql(query, engine)
+        #print('tickets')
+        #print(dato)
 
         #df = pd.read_excel('tickets.xlsx')
-        df = dato.where(pd.notnull(dato), None)
-        print(df)
+        #df = dato.where(pd.notnull(dato), None)
+        #print(df)
         return jsonify(df.to_dict(orient='records'))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -170,39 +249,60 @@ def get_datos(query, params=None):   # de prueva
         return None
 
 #funcion que ajusta los poligonos 
-def ajustar_poligono(poligono):
-    #seaplica un dezplazamiento
-    delta_x=-0.00031179042002
 
-    delta_y=0.00065862997603
-    coordenadas = list(poligono.exterior.coords)
-    coordenadas_ajustadas = [(x + delta_x, y + delta_y) for x, y in coordenadas]
-    return Polygon(coordenadas_ajustadas)
 
+def ajustar_poligono(geometria):
+    delta_x = -0.00031179042002
+    delta_y = 0.00065862997603
+
+    # Aplicar desplazamiento según tipo de geometría
+    if isinstance(geometria, Polygon):
+        # Para polígonos: desplazar todas las coordenadas del exterior
+        coordenadas = list(geometria.exterior.coords)
+        coordenadas_ajustadas = [(x + delta_x, y + delta_y) for x, y in coordenadas]
+        return Polygon(coordenadas_ajustadas)
+
+    elif isinstance(geometria, LineString):
+        # Para líneas: desplazar todos los puntos de la línea
+        coordenadas = list(geometria.coords)
+        coordenadas_ajustadas = [(x + delta_x, y + delta_y) for x, y in coordenadas]
+        return LineString(coordenadas_ajustadas)
+
+    elif isinstance(geometria, Point):
+        # Para puntos: desplazar la coordenada individual
+        return Point(geometria.x + delta_x, geometria.y + delta_y)
+
+    else:
+        raise ValueError(f"Tipo de geometría no soportada: {type(geometria)}")
 
 def get_pol1(query, params=None):   # de prueva 
     try:
         query=text(str(query))
-        with engine.connect() as conn:
-            gdf=gpd.read_postgis(query,conn,params=params,geom_col='geometry')
+        with engine1.connect() as conn:
+            gdf=gpd.read_postgis(query,conn,params=params,geom_col='geometry') 
+            
+             #cambia a geometry
             if gdf.crs is None:
                 gdf=gdf.set_crs(epsg=4326)
             else:
                 gdf=gdf.to_crs(epsg=4326)
+        
             return  gdf
     except  Exception as e:
         print(f"error   en get_pol1:   {str(e)}")
         return  None
-    
+#funcion que obtiene  las geometrias de las delegaciones que se cargan  al inicio de la pagina
 @app.route('/get_polygons')
 def get_polygons():
-    query =  """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias  WHERE geometry IS NOT NULL LIMIT 20""" # Reemplaza con tu tabla
-    #query= """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias_cdmx  WHERE "NOMGEO"='Azcapotzalco'"""
+    query =  """SELECT *, ST_AsText(geometry) as geom_text  FROM catastro.rdel1  WHERE geometry IS NOT NULL LIMIT 20""" # query para extarer la geometrias de la base 
     gdf = get_pol1(query)
-    if gdf is not None:
+    
+    if gdf is not None  and not gdf.empty:
+        gdf['geometry']=gdf['geometry'].apply(ajustar_poligono)
+    
         polyg=gdf.to_json()
         #print(polyg)
-        return polyg,200
+        return polyg,200  #se retorna la geometria  al  front(js)
     else:
         return jsonify({"error": "No se pudieron obtener los datos de la base de datos"}), 500
 #extrae los poligonos de las delegacions
@@ -211,10 +311,11 @@ def get_delegacion():
     delegacion=request.args.get('nombre',None)
     print(delegacion)
     #query = """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias_cdmx  WHERE "NOMGEO"= %(param_nombre)s """
-    query = """SELECT *, ST_AsText(geometry) as geom_text  FROM public.poligonos_alcaldias_cdmx  WHERE "CVE_MUN" = :param_nombre"""
+    query = """SELECT *, ST_AsText(geometry) as geom_text  FROM catastro.rdel1  WHERE geometry IS NOT NULL  LIMIT 20"""
     gdf=get_pol1(query,params={"param_nombre":delegacion})
     #print(gdf)
     if gdf is not None and not gdf.empty:
+        gdf['geometry']=gdf['geometry'].apply(ajustar_poligono)
         return gdf.to_json(),200
     else:
         return jsonify({"error":"no se encontro delegacion"}),404
@@ -286,21 +387,6 @@ def buscar_predio_global():
     except Exception as e:
         print(f"Error en la consulta: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
-    """
-   # with ThreadPoolExecutor(max_workers=8) as executor:
-   #     futures=[executor.submit(process_table,tabla,delegacion,claves,clave) for tabla,delegacion in  tablas.items()]
-
-        for future in concurrent.futures.as_completed(futures):
-            result=future.result()
-            if result:
-                for  f   in futures:
-                    f.cancel()
-                fin=time.time()
-                print('tiempo',fin-inicio)
-                return result, 200
-    return  jsonify({"error":  "predio no encontrado"}), 404
-    """
-
 
 
 @app.route("/predio")
@@ -354,12 +440,13 @@ def buscar():
         deleg = corre.get(delegacion[1:3], delegacion[1:3])
         print(deleg)
         #query=f"""SELECT  * FROM  public."{deleg}"   WHERE fid=:valor"""  # prueva funcional con otros datos
-        query="SELECT * FROM public.rpred"+deleg+" WHERE clave=:valor "   #cartogarfia real
         
+        #query="SELECT * FROM d1.rpred WHERE clave=:valor "   #esuqema (public, d1)
+        query="SELECT * FROM d1.repred  WHERE clave = :valor" 
         param={'valor': valor}
         gdf=get_pol1(query,param)
         gdf['geometry']=gdf['geometry'].apply(ajustar_poligono)   #llama la funcion que ajusta los poligonos de los predios
-        #print(gdf.to_json)
+        print(gdf)
         return  gdf.to_json(),200 if not gdf.empty else jsonify({"error": "sin resultados"})
     
     if tipo_busqueda=='construccion':    #funcion para agregar la capa  de construccion   las capas que se extraen de la base se dezfazan
@@ -384,8 +471,8 @@ def buscar():
         delegacion=delegacion
         valor=str(valor)
            
-        query=""" SELECT * FROM public."rman"  WHERE clave =:vall"""  
-        #query="""SELECT geometry FROM public."Manzanas"  WHERE "CVEGEO" =:vall """
+        #query=""" SELECT * FROM catastro.ecallep  LIMIT 100"""  
+        query="""SELECT * FROM catastro.rmanzp  WHERE clave= :vall """   #numero de clave entre comiillas
   
         para1={'vall':valor}
         gdf=get_pol1(query,para1)
@@ -394,15 +481,35 @@ def buscar():
         return gdf.to_json(),200 if not gdf.empty else jsonify({"error":"sin resultados "})
     if tipo_busqueda=='segmentacion':
         #print(838)
-        valor=valor
-        corre={'10':'ALVARO_OBREGON','02':'AZCAPOTZALCO','14':'BENITO_JUAREZ','03':'COYOACAN','04':'CUAJIMALPA','15':'CUAUHTEMOC','05':'GUSTAVO_A_MADERO','06':'IZTACALCO','07':'IZTAPALAPA','08':'MAGDALENA_CONTRERAS','16':'MIGUEL_HIDALGO','09':'MILPA_ALTA','11':'TLAHUAC','12':'TLALPAN','17':'VENUSTIANO_CARRANZA','13':'XOCHIMILCO'}
-        deleg=corre.get(delegacion[1:3],delegacion[1:3])
-        print('segmentacion',deleg)
-        query= f"""SElECT *  FROM (SELECT   g.fid, g.geometry, d.valor_suelo, d.cuartil FROM  public."{deleg}" g JOIN  (SELECT fid::text, valor_suelo, NTILE(10) OVER (ORDER BY valor_suelo) AS cuartil  FROM public."datos_{deleg}") d ON  g.fid::text = d.fid) WHERE cuartil={valor} """
-        #print(query)
-        gdf=get_pol1(query)
+        query="""SELECT * FROM d1.repred  WHERE clave IN (
+                '75403901', 
+                '75403927', 
+                '75403974', 
+                '75403973', 
+                '75403928', 
+                '75403930', 
+                '75403978', 
+                '75403932', 
+                '75403929', 
+                '75403931', 
+                '75403936', 
+                '75403979');"""
+        param={'valor': valor}
+        gdf=get_pol1(query,param)
+        gdf['geometry']=gdf['geometry'].apply(ajustar_poligono)   #llama la funcion que ajusta los poligonos de los predios
         print(gdf)
-        return gdf.to_json(), 200 if not gdf.empty else jsonify({"error":"sin resultados"})
+        return  gdf.to_json(),200 if not gdf.empty else jsonify({"error": "sin resultados"})
+    
+
+        #valor=valor
+        #corre={'10':'ALVARO_OBREGON','02':'AZCAPOTZALCO','14':'BENITO_JUAREZ','03':'COYOACAN','04':'CUAJIMALPA','15':'CUAUHTEMOC','05':'GUSTAVO_A_MADERO','06':'IZTACALCO','07':'IZTAPALAPA','08':'MAGDALENA_CONTRERAS','16':'MIGUEL_HIDALGO','09':'MILPA_ALTA','11':'TLAHUAC','12':'TLALPAN','17':'VENUSTIANO_CARRANZA','13':'XOCHIMILCO'}
+        #deleg=corre.get(delegacion[1:3],delegacion[1:3])
+        #print('segmentacion',deleg)
+        #query= f"""SElECT *  FROM (SELECT   g.fid, g.geometry, d.valor_suelo, d.cuartil FROM  public."{deleg}" g JOIN  (SELECT fid::text, valor_suelo, NTILE(10) OVER (ORDER BY valor_suelo) AS cuartil  FROM public."datos_{deleg}") d ON  g.fid::text = d.fid) WHERE cuartil={valor} """
+        #print(query)
+        #gdf=get_pol1(query)
+        #print(gdf)
+        #return gdf.to_json(), 200 if not gdf.empty else jsonify({"error":"sin resultados"})
          
 
 

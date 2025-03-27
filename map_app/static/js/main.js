@@ -1,5 +1,4 @@
 
-
      // Coordenadas del polígono de la Ciudad de México
      const mexicoCityBounds = [
         [18.973773, -99.316406], // Suroeste
@@ -224,17 +223,55 @@
         if (menus.classList.contains('show-menu')){
             await cargarFolios();
         }
+       // menus.classlist.toggle('show-meu',!wasOpen);
     }
     async function  cargarFolios() {
+        console.log('usuario es admin:', usuarioEsAdmin);
         try{
-            const response=await  fetch('/get_tickets')
-            const tickets = await response.json();
+            const response=await  fetch('/get_tickets');
+            const tickets = await response.json();   
             const  container=  document.getElementById('folios-list');
-            container.innerHTML='';
+            container.innerHTML= `
+            <div class="form-group">
+                <input type="text" 
+                  placeholder="busca ticket" 
+                    id="input-busqueda"
+                    class="search-input" 
+            </div>
+                    `;
+            
+            if(usuarioEsAdmin){
+            let usuarios=[];
+            const userResponse=  await  fetch('/get_users');
+            usuarios=   await  userResponse.json();
+            console.log(usuarios);
+            usuarios.forEach(us=>{
+                const  div  =document.createElement('div');
+                div.className='folio-item';
+               div.innerHTML=`
+                <strong>No  de Ticket:</strong> ${us.username}`;
+            });
+
+      
+            //const formularioHTML = `   sin funcionalidad
+            //<div class="form-group">
+            //    <input type="text" 
+            //      placeholder="${placeholders[tipo]}" 
+            //        id="input-busqueda"
+            //        class="search-input"
+            //        onkeypress="manejarEnter(event,'${delegacion}','${tipo}')">
+            //    <button onclick="realizarBusqueda('${delegacion}', '${tipo}')" class="search-button"> Buscar </button>
+            //</div>`;
+
+
+            
+
+
             tickets.forEach(tickett =>{
                 const  div  =document.createElement('div');
                 div.className='folio-item';
                 div.innerHTML=`
+        
                 <strong>No  de Ticket:</strong> ${tickett.ticket}
                 <div class="ticket-details" style="display:none;">
                     <div class="detail-item"><strong>Folio:</strong> ${tickett.folio || 'Sin datos' }</div>
@@ -242,16 +279,58 @@
                     <div class="detail-item"><strong>Cuenta:</strong> ${tickett.cuenta || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Tarea:</strong> ${tickett.tarea  || 'Sin datos'}</div>
                     <div class="detail-item"><strong>Error:</strong> ${tickett.error  || 'Sin datos'}</div>
-                    <div class="detail-item"><strong>Mensaje completo:</strong>  ${tickett.texto || 'sin datos '}</div>
-                                   
+                    <div class="detail-item">
+                        <span class="status-indicator ${tickett.status === 'resuelto' ? 'resuelto' : 'no-resuelto'}"></span>
+                        Estado: ${tickett.status || 'no resuelto'}
+                    </div>
+                    <div class="detail-item">
+                        Asignado a: ${tickett.assigned_to || 'Sin asignar'}
+                    </div>
+                </div>                 
             `;  
                 div.addEventListener('click',function(){
                     const  details=this.querySelector('.ticket-details');
                     details.style.display=details.style.display==='none' ? 'block' : 'none';
+                    console.log('ticket',tickett.ticket );
+                    if (usuarioEsAdmin){
+                        mostrarControlesAdmin( div,tickett,usuarios)
+                  };
                 });
                 container.appendChild(div);
             });
-
+        }
+        else{
+        tickets.forEach(tickett =>{
+            const  div  =document.createElement('div');
+            div.className='folio-item';
+            div.innerHTML=`
+            <strong>No  de Ticket:</strong> ${tickett.ticket}
+            <div class="ticket-details" style="display:none;">
+                <div class="detail-item"><strong>Folio:</strong> ${tickett.folio || 'Sin datos' }</div>
+                <div  class="detail-item"><strong>Fecha de registro:</Strong>  ${tickett.fecha_proceso || '' } </div> 
+                <div class="detail-item"><strong>Cuenta:</strong> ${tickett.cuenta || 'Sin datos'}</div>
+                <div class="detail-item"><strong>Tarea:</strong> ${tickett.tarea  || 'Sin datos'}</div>
+                <div class="detail-item"><strong>Error:</strong> ${tickett.error  || 'Sin datos'}</div>
+                <div class="detail-item">
+                    <span class="status-indicator ${tickett.status === 'resuelto' ? 'resuelto' : 'no-resuelto'}"></span>
+                    Estado: ${tickett.status || 'no resuelto'}
+                </div>
+                <div class="detail-item">
+                    Asignado a: ${tickett.assigned_to || 'Sin asignar'}
+                </div>
+            </div>                 
+        `;  
+            div.addEventListener('click',function(){
+                const  details=this.querySelector('.ticket-details');
+                details.style.display=details.style.display==='none' ? 'block' : 'none';
+                console.log('ticket',tickett.ticket );
+                if (usuarioEsAdmin){
+                    mostrarControlesAdmin( div,tickett,usuarios)
+              };
+            });
+            container.appendChild(div);
+        });
+        }
         } catch(error){
             console.error('error  al cargar tickets:', error);
         }
@@ -367,11 +446,11 @@
     // funcion para cargar los datos
     async function loadDelegacionGeometry(delegacion) {
       try {
-    // Eliminar capa anterior si existe
+    // Eliminar capa anterior si existel
           if (delegacionLayer) {map.removeLayer(delegacionLayer);}
 
     
-
+    //cuando se lla ma  funcion no hace nada
     // Fetch específico para delegaciones
             const response = await fetch(`/get_delegacion?nombre=${encodeURIComponent(delegacion)}`);
             if (!response.ok) throw new Error('Error en la respuesta');
@@ -381,10 +460,10 @@
     // Crear capa con estilo y tooltip
             delegacionLayer = L.geoJSON(data, {
                 style: {
-                color: '#FF5722',
-                weight: 5,
-                fillColor: '#FF9800',
-                fillOpacity: 0.15
+                    color: '#800000',
+                    weight: 2,
+                    fillColor: 'bd6568',
+                    fillOpacity: 0.2
                 },
                 onEachFeature: function(feature, layer) {
                 // Verificar si la propiedad "nombre_delegacion" existe en el feature
@@ -407,6 +486,7 @@
         alert('No se pudo cargar la delegación seleccionada');
       } 
     }
+
     // Función para cambiar la capa
     function setLayer(type) {
         if (layers[type]) {
@@ -458,3 +538,127 @@ function anadirCapas() {
     else setLayer('topographic');
     document.getElementById('side-menu').classList.remove('active'); // Cierra el menú
 }
+
+
+//nuevas funciones para  controles de administrador a tickets   
+
+
+function mostrarControlesAdmin(div, ticket, usuarios) {
+    //console.log('mostrar  controlesaDmin  par ticket :',ticket,usuarios);
+    //console.log(details)
+    if (!div){
+        console.error("Error:  contenedor no valido");
+        return;
+    }
+
+    const details = div.querySelector('.ticket-details');  //esta parrte o se quita 
+
+    if(!details){
+        console.error("contenedro  sin elelmentos");
+        return;
+    }
+    
+
+    const  oldControl=details.querySelectorAll('.status-control,  assign-control');
+    oldControl.forEach(control  =>   control.remove());
+
+
+    
+    // Selector de Estado
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'detail-item    status-control';
+    statusDiv.innerHTML = `
+        <strong>Estado:</strong>
+        <select class="status-selector">
+            <option value="no resuelto" ${ticket.status === 'no resuelto' ? 'selected' : ''}>No Resuelto</option>
+            <option value="resuelto" ${ticket.status === 'resuelto' ? 'selected' : ''}>Resuelto</option>
+        </select>
+    `;
+    
+    // Selector de Asignación
+    const assignDiv = document.createElement('div');
+    assignDiv.className = 'detail-item     status-control';
+    assignDiv.innerHTML = `
+        <strong>Asignado a:</strong>
+        <select class="assign-selector">
+            <option value="sin asignar">Sin asignar</option>
+            ${usuarios.map(user => `
+                <option value="${user}" ${ticket.assigned_to === user ? 'selected' : ''}>
+                    ${user}
+                </option>
+            `).join('')}
+        </select>
+    `;
+
+    // Agregar eventos
+    
+    statusDiv.querySelector('select').addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        console.log('mostrar  controles :',ticket.ticket,'status',e.target.value);  //actualizarTicket(ticket.ticket,'status', e.target.value); 
+        actualizarTicket(ticket.ticket,'status', e.target.value);
+       // e.stopPropagation();  
+    });  
+   
+    assignDiv.querySelector('select').addEventListener('click', (e) => {
+         e.stopPropagation();  //actualizarTicket(ticket.ticket,'assigned_to',e.target.value);
+         console.log('mostrar opciones',ticket.ticket,'assigned_to',e.target.value);
+         actualizarTicket(ticket.ticket,'assigned_to',e.target.value);
+         //e.stopPropagation();
+         
+    });
+    
+
+    // Insertar antes del último elemento
+    //details.insertBefore(statusDiv, details.lastElementChild);    // conetos   la funcion  hace el trabajo
+    details.appendChild(statusDiv);
+
+    //details.insertBefore(assignDiv,details.lastElementChild);     ///con esto la funcion   funciona d forma correcta
+    details.appendChild(assignDiv);
+    
+}
+
+
+
+async function actualizarTicket(ticket, campo, valor) {
+    console.log('dtos:',ticket,campo, valor )
+    try {
+        const response = await fetch('/update_ticket', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                ticket: ticket,
+                [campo]: valor,
+                [campo]:valor
+            })
+        });
+
+        const resultado = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(resultado.error || 'Error al actualizar');
+        }
+
+        // Actualizar UI
+        //const ticketElement = document.querySelector(`.folio-item:has([data-ticket-id="${ticket}"])`);
+        //if (ticketElement) {
+        //    if (campo === 'status') {
+        //        ticketElement.querySelector('.status-selector').value = valor;
+        //        ticketElement.querySelector('.status-indicator').className = `status-indicator ${valor === 'resuelto' ? 'resuelto' : 'no-resuelto'}`;
+        //    } else {
+        //        ticketElement.querySelector('.assign-selector').value = valor;
+        //  }
+        //}
+
+        // Mostrar confirmación
+        const confirmation = document.createElement('div');
+        confirmation.textContent = '✅ Cambios guardados';
+        confirmation.style.cssText = 'position:fixed; top:20px; right:20px; color:green; z-index:9999;';
+        document.body.appendChild(confirmation);
+        setTimeout(() => confirmation.remove(), 2000);
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al guardar los cambios');
+    }
+}
+

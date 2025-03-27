@@ -8,7 +8,13 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet"  href="{{  url_for('static', filename='css/main.css')}}">
     <!-- JS de Leaflet   https://unpkg.com/leaflet/dist/leaflet.js -->
+    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Define si el usuario tiene permisos de administrador
+        const usuarioEsAdmin = {{ current_user.is_admin | default(false) | tojson | safe }};
+    </script>
 </head>
 <body>
 
@@ -46,7 +52,10 @@
         <div id="side-menu" class="side-menu">
             <button onclick="controlTickets()">Control de Tickets</button>
             <button onclick="resolucionTickets()">Resolución de Tickets</button>
-            <button onclick="anadirCapas()">Añadir Capas</button>
+            <button onclick="anadirCapas()">Añadir Capas</button><!--onclic="kanadirCapas()""-->
+            
+
+            
         </div>
     <div class="auth-container">
         {% if current_user.is_authenticated %}
@@ -140,6 +149,7 @@
         <iframe id="info-predio" class="contenido"></iframe>
     </div>
     </div>
+   
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script   src="{{  url_for('static', filename ='js/main.js')}}"></script>
 </body>

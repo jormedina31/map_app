@@ -305,18 +305,24 @@ input[type="radio"] {
     }
     /* Agrega estos estilos al CSS */
 .tickets-submenu {
-    position: relative;
-    display: inline-block;
+    position: absolute;
+    top:160px;      /* en esta parte se mueve la ubicacion de los tickets*/
+    left: 20px;
+    z-index: 1001;
 }
 
+.tickets-submenu select {
+    z-index: 1002 !important;
+    pointer-events: auto  !important;
+}
 
 .submenu-st {
     display: none;
     position: absolute;
-    top: 160px; /* Debajo de la barra de autenticación */
+    top: 100px;/* Debajo de la barra de autenticación */
     left: 5px;
-    z-index: 1000;
-    /*background: white; */
+    z-index: 1001;
+    background: rgba(255, 255, 255, 0.95);
     padding: 20px; 
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
@@ -364,7 +370,8 @@ input[type="radio"] {
 
 
 .folios-container {
-    max-height: 400px;
+    max-height: 70vh;   /*  400px;  */
+    
     overflow-y: auto;
     background: white;
     padding: 10px;
@@ -374,6 +381,7 @@ input[type="radio"] {
 
 .folio-item {
     padding: 8px 12px;
+       /* cambio  */
     margin: 5px 0;
     background: #f8f8f8;
     border-left: 4px solid #800000;
@@ -388,6 +396,7 @@ input[type="radio"] {
 
 .ticket-details {
     background: white;
+    top: 300x;
     padding: 15px;
     margin-top: 10px;
     border-radius: 5px;
@@ -479,3 +488,61 @@ input[type="radio"] {
 .side-menu button:hover {
     background-color: #600000; /* Oscurece al pasar el mouse */
 }
+
+/* nuevos estilos agregados   */
+.ticket-selector, .status-selector {
+    padding: 5px;
+    margin: 5px 0;
+    border: 1px solid #800000;
+    border-radius: 4px;
+    width: 100%;
+
+}
+
+.status-selector, .assign-selector {
+    width: 60%;
+    margin: 5px 0;
+
+    padding: 5px;
+    margin-left: 10px;
+    border: 1px solid #800000;
+    border-radius: 4px;
+    
+    background-color: #fff;
+}
+
+.detail-item select {
+    width: 60%;
+    display: inline-block;
+}
+
+/*  indicador de estado  */
+
+.status-indicator {
+
+    display: inline-block;
+    
+    width: 12px;
+    
+    height: 12px;
+    
+    border-radius: 50%;
+    
+    margin-right: 5px;
+    
+    }
+    
+.resuelto {
+    
+    background-color: #4CAF50; /* Verde */
+    
+    }
+    
+.no-resuelto {
+    
+    background-color: #f44336; /* Rojo */
+    
+    }
+
+
+

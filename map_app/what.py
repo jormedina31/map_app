@@ -167,7 +167,7 @@ def extrae_inf(text):
 
 def read_last_message1():
     try:
-        chat_title = 'Dey'
+        chat_title = 'Dey'   #nombre del grupo
         chat = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'//span[@title="{chat_title}"]')))
         chat.click()
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.message-in, div.message-out')))
