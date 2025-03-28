@@ -8,7 +8,7 @@ import pandas as pd
 #from dotenv import load_dotenv
 from shapely.geometry import Polygon,LineString, Point
 import os
-from config import DATABASE,DATABASE1
+from config import DATABASE
 import csv
 import concurrent.futures
 import time
@@ -31,15 +31,15 @@ engine = create_engine(
     max_overflow=20,
     pool_recycle=1800
 )
-DATABASE_URL1 = f'postgresql://{DATABASE1["user"]}:{DATABASE1["password"]}@{DATABASE1["host"]}:{DATABASE1["port"]}/{DATABASE1["database"]}'
+#DATABASE_URL1 = f'postgresql://{DATABASE1["user"]}:{DATABASE1["password"]}@{DATABASE1["host"]}:{DATABASE1["port"]}/{DATABASE1["database"]}'
 
-engine1 = create_engine(
-    DATABASE_URL1,
-    poolclass=QueuePool,
-    pool_size=10,
-    max_overflow=20,
-    pool_recycle=1800
-)
+#engine1 = create_engine(
+#    DATABASE_URL1,
+#    poolclass=QueuePool,
+#    pool_size=10,
+#    max_overflow=20,
+#    pool_recycle=1800
+#)
 
 
 
@@ -64,7 +64,7 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     with engine_users.connect() as conn:
-        result = conn.execute(text('SELECT id,username,is_admin FROM users WHERE id = :id'), {'id': user_id}).fetchone()
+        result = conn.execute(text('SELECT id,username,is_admin FROM ticket.usuarios WHERE id = :id'), {'id': user_id}).fetchone()
         if result:
             return User(id=result[0], username=result[1], is_admin=result[2] )
     return None
@@ -95,7 +95,7 @@ def update_ticket():
             status = data['status']
             with engine.connect() as con:
                 con.execute(
-                    text("UPDATE tickets SET status = :status WHERE ticket = :tik"),
+                    text("UPDATE ticket.ticke SET status = :status WHERE ticket = :tik"),
                     {'status': status, 'tik': ticket}
                 )
                 con.commit()
@@ -106,7 +106,7 @@ def update_ticket():
             assigned_to = data['assigned_to']
             with engine.connect() as conn:
                 conn.execute(
-                    text("UPDATE tickets SET assigned_to = :assig WHERE ticket = :tik"),
+                    text("UPDATE ticket.ticke SET assigned_to = :assig WHERE ticket = :tik"),
                     {'assig': assigned_to, 'tik': ticket}
                 )
                 conn.commit()
@@ -126,7 +126,7 @@ def  get_users():
         return jsonify({"error": "No  autorizado"}),  403 
     
     with engine.connect()  as conn:
-        result=conn.execute(text(" SELECT  username  FROM  users "))
+        result=conn.execute(text(" SELECT  username  FROM  ticket.usuarios "))
         users=[row[0]   for row  in result]
     return  jsonify(users)
 
@@ -140,10 +140,10 @@ def get_tickets():
             f'{DATABASE["host"]}:{DATABASE["port"]}/{DATABASE["database"]}'
         )
         if current_user.is_admin:
-            query = text('SELECT * FROM  public.tickets  ORDER BY fecha_proceso')
+            query = text('SELECT * FROM  ticket.ticke  ORDER BY fecha_proceso')
             params={}
         else:
-            query=text(''' SELECT * FROM public.tickets   WHERE   assigned_to=  :username  ORDER BY   fecha_proceso ''')
+            query=text(''' SELECT * FROM ticket.ticke   WHERE   assigned_to=  :username  ORDER BY   fecha_proceso ''')
             params={'username': current_user.username}    
         #query = text('SELECT ticket, folio, cuenta, tarea ,usuario,error,texto ,fecha_proceso, status, assined_to FROM public.tickets  ORDER  BY fecha_proceso')
         #query = text(str(query))  # Convierte la consulta a texto con parámetros nombrados
@@ -172,14 +172,14 @@ def signup():
         password = request.form['password']
         
         with engine_users.connect() as conn:
-            existing_user = conn.execute(text('SELECT * FROM users WHERE username = :username'), 
+            existing_user = conn.execute(text('SELECT * FROM ticket.usuarios WHERE username = :username'), 
                                        {'username': username}).fetchone()
             if existing_user:
                 flash('El nombre de usuario ya existe')
                 return redirect(url_for('signup'))
             
             hashed_password = generate_password_hash(password)
-            conn.execute(text('INSERT INTO users (username, password) VALUES (:username, :password)'),
+            conn.execute(text('INSERT INTO ticket.usuarios (username, password) VALUES (:username, :password)'),
                        {'username': username, 'password': hashed_password})
             conn.commit()
             flash('Registro exitoso. Por favor inicia sesión.')
@@ -193,7 +193,7 @@ def login():
         password = request.form['password']
         
         with engine_users.connect() as conn:
-            user = conn.execute(text('SELECT * FROM users WHERE username = :username'), 
+            user = conn.execute(text('SELECT * FROM ticket.usuarios WHERE username = :username'), 
                               {'username': username}).fetchone()
             if user and check_password_hash(user[2], password):
                 user_obj = User(id=user[0], username=user[1])
@@ -278,7 +278,7 @@ def ajustar_poligono(geometria):
 def get_pol1(query, params=None):   # de prueva 
     try:
         query=text(str(query))
-        with engine1.connect() as conn:
+        with engine.connect() as conn:
             gdf=gpd.read_postgis(query,conn,params=params,geom_col='geometry') 
             
              #cambia a geometry
